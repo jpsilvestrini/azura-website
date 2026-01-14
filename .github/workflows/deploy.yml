@@ -1,4 +1,4 @@
-name: Discloud Deploy Action
+name: Deploy Discloud Site (Manual)
 
 on:
   push:
@@ -6,29 +6,23 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      DISCLOUD_TOKEN: ${{ secrets.DISCLOUD_TOKEN }}
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Create deploy zip
+        run: |
+          zip -r deploy.zip . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "node_modules/*"
 
-      - name: Debug Node
-        run: node -v
-
-      - name: Deploy to Discloud
-        uses: discloud/deploy-action@v1
-        with:
-          token: ${{ secrets.DISCLOUD_TOKEN }}
-          app_id: azurajs
+      - name: Upload to Discloud API
+        run: |
+          curl -X PUT "https://api.discloud.app/v2/app/azurajs/commit" \
+            -H "api-token: ${{ secrets.DISCLOUD_TOKEN }}" \
+            -F "file=@deploy.zip"
