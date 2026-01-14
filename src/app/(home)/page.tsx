@@ -24,7 +24,6 @@ import { GetStartedButton } from "./get-started-button";
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-blue-500/30 overflow-x-hidden">
-      {/* Background Grid & Ambient Glow */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
         <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-77.5 w-77.5 rounded-full bg-blue-500 opacity-20 blur-[100px]"></div>
@@ -32,7 +31,6 @@ export default function HomePage() {
       </div>
 
       <main className="relative z-10 pt-32 pb-20 px-6">
-        {/* Hero Section */}
         <div className="max-w-5xl mx-auto text-center space-y-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium uppercase tracking-wider">
             <Sparkles size={12} />
@@ -52,7 +50,6 @@ export default function HomePage() {
             zero boilerplate and maximum performance.
           </p>
 
-          {/* Buttons Area */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <GetStartedButton />
 
@@ -68,13 +65,11 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Install Box Area */}
           <div className="pt-8 flex justify-center">
             <InstallTabs />
           </div>
         </div>
 
-        {/* Code Showcase */}
         <div className="max-w-4xl mx-auto mt-24">
           <div className="relative rounded-xl border border-white/10 bg-[#0A0A0A] shadow-2xl shadow-blue-900/10 overflow-hidden backdrop-blur-sm">
             <div className="flex items-center px-4 py-3 border-b border-white/5 bg-white/2">
@@ -94,9 +89,9 @@ export default function HomePage() {
                 <code>
                   <span className="text-purple-400">import</span> {"{"} AzuraClient {"}"}{" "}
                   <span className="text-purple-400">from</span>{" "}
-                  <span className="text-green-400">'azurajs'</span>;<br />{" "}
-                  <span className="text-purple-400">import</span> {"{"} Controller, Get {"}"}{" "}
-                  <span className="text-purple-400">from</span>{" "}
+                  <span className="text-green-400">'azurajs'</span>;<br />
+                  <span className="text-purple-400">import</span> {"{"} Controller, Get,
+                  applyDecorators {"}"} <span className="text-purple-400">from</span>{" "}
                   <span className="text-green-400">'azurajs/decorators'</span>;<br />
                   <br />
                   <span className="text-yellow-300">@Controller</span>(
@@ -122,15 +117,21 @@ export default function HomePage() {
                   <span className="text-purple-400">new</span>{" "}
                   <span className="text-blue-300">AzuraClient</span>();
                   <br />
-                  app.<span className="text-blue-300">listen</span>(
-                  <span className="text-orange-300"></span>);
+                  <br />
+                  <span className="text-neutral-500">// Register controllers</span>
+                  <br />
+                  <span className="text-purple-400">applyDecorators</span>(app, [
+                  <span className="text-blue-300">AppController</span>]);
+                  <br />
+                  <br />
+                  <span className="text-purple-400">await</span> app.
+                  <span className="text-blue-300">listen</span>()
                 </code>
               </pre>
             </div>
           </div>
         </div>
 
-        {/* Features Grid */}
         <div className="max-w-6xl mx-auto mt-32">
           <div className="mb-12">
             <h2 className="text-3xl font-bold text-white mb-4">Why AzuraJS?</h2>
@@ -173,13 +174,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Testimonials Section */}
         <TestimonialsSection />
 
-        {/* Partners Section */}
         <PartnersSection />
 
-        {/* Footer */}
         <footer className="max-w-6xl mx-auto mt-32 pt-8 border-t border-white/5 pb-8 flex flex-col md:flex-row justify-between items-center gap-4 text-neutral-500 text-sm">
           <div>© {new Date().getFullYear()} AzuraJS Framework.</div>
         </footer>
@@ -187,8 +185,6 @@ export default function HomePage() {
     </div>
   );
 }
-
-// -- Components --
 
 function InstallTabs() {
   const [activeTab, setActiveTab] = useState<"npm" | "pnpm" | "bun" | "yarn">("npm");
@@ -371,6 +367,11 @@ function PartnersSection() {
       logo: "/partners/gratian.png",
       url: "https://gratian.pro/",
     },
+    {
+      name: "Eduardo Developer",
+      logo: "/partners/edu-dev.png",
+      url: "https://www.youtube.com/channel/UCOiAq87wiESjgifU4JozV1w",
+    },
   ];
 
   return (
@@ -382,20 +383,20 @@ function PartnersSection() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {partners.map((partner, index) => (
           <a
             key={index}
             href={partner.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative p-8 rounded-xl bg-neutral-900/50 border border-white/5 hover:border-white/10 hover:bg-neutral-900 transition-all duration-300 hover:scale-105"
+            className="group flex items-center justify-center h-28 p-6 rounded-xl bg-neutral-900/30 border border-white/5 hover:border-white/10 hover:bg-neutral-800 transition-all duration-300"
             title={partner.name}
           >
             <img
               src={partner.logo}
               alt={partner.name}
-              className="h-12 w-auto grayscale group-hover:grayscale-0 transition-all duration-300 opacity-70 group-hover:opacity-100"
+              className="max-h-full max-w-full object-contain opacity-50 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300 filter"
             />
           </a>
         ))}
