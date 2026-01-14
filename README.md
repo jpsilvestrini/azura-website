@@ -1,45 +1,81 @@
-# website
+# AzurJS Website
 
-This is a Next.js application generated with
-[Create Fumadocs](https://github.com/fuma-nama/fumadocs).
+> Repositório do website oficial do AzurJS, construído com [Next.js](https://nextjs.org/) e [Fumadocs](https://fumadocs.dev/).
 
-Run development server:
+---
+
+## Índice
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Como Rodar Localmente](#como-rodar-localmente)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Como Contribuir](#como-contribuir)
+- [Saiba Mais](#saiba-mais)
+
+---
+
+## Sobre o Projeto
+
+Este projeto é responsável pelo site de documentação e landing page do AzurJS. Utiliza Next.js para o frontend e Fumadocs para gerenciamento de conteúdo em MDX.
+
+## Como Rodar Localmente
+
+Clone o repositório e instale as dependências:
+
+```bash
+npm install
+# ou
+pnpm install
+# ou
+yarn install
+```
+
+Inicie o servidor de desenvolvimento:
 
 ```bash
 npm run dev
-# or
+# ou
 pnpm dev
-# or
+# ou
 yarn dev
 ```
 
-Open http://localhost:3000 with your browser to see the result.
+Abra http://localhost:3000 no seu navegador para visualizar o site.
 
-## Explore
+## Estrutura do Projeto
 
-In the project, you can see:
+- `src/lib/source.ts`: Adaptador para fonte de conteúdo. Veja [`loader()`](https://fumadocs.dev/docs/headless/source-api) para detalhes.
+- `src/lib/layout.shared.tsx`: Opções compartilhadas de layout.
+- `src/app/(home)`: Landing page e páginas institucionais.
+- `src/app/docs`: Layout e páginas de documentação.
+- `src/app/api/search/route.ts`: Handler de busca.
+- `content/`: Documentação em MDX, organizada por idioma.
 
-- `lib/source.ts`: Code for content source adapter, [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the interface to access your content.
-- `lib/layout.shared.tsx`: Shared options for layouts, optional but preferred to keep.
+## Como Contribuir
 
-| Route                     | Description                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `app/(home)`              | The route group for your landing page and other pages. |
-| `app/docs`                | The documentation layout and pages.                    |
-| `app/api/search/route.ts` | The Route Handler for search.                          |
+Contribuições são bem-vindas! Siga os passos abaixo para colaborar:
 
-### Fumadocs MDX
+1. Faça um fork deste repositório.
+2. Crie uma branch para sua feature ou correção:
+   ```bash
+   git checkout -b minha-feature
+   ```
+3. Faça suas alterações e commit:
+   ```bash
+   git commit -m "feat: minha contribuição"
+   ```
+4. Envie para seu fork:
+   ```bash
+   git push origin minha-feature
+   ```
+5. Abra um Pull Request detalhando suas mudanças.
 
-A `source.config.ts` config file has been included, you can customise different options like frontmatter schema.
+**Dicas:**
+- Siga o padrão de código do projeto.
+- Sempre descreva claramente o que foi alterado.
+- Se possível, adicione testes ou exemplos.
 
-Read the [Introduction](https://fumadocs.dev/docs/mdx) for further details.
+## Saiba Mais
 
-## Learn More
-
-To learn more about Next.js and Fumadocs, take a look at the following
-resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js
-  features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Fumadocs](https://fumadocs.dev) - learn about Fumadocs
+- [Documentação Next.js](https://nextjs.org/docs) — Recursos e API do Next.js
+- [Tutorial Interativo Next.js](https://nextjs.org/learn)
+- [Fumadocs](https://fumadocs.dev) — Documentação do Fumadocs
