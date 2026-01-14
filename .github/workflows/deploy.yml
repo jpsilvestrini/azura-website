@@ -17,5 +17,3 @@ jobs:
       - uses: discloud/deploy-action@v1
         with:
           token: ${{ secrets.DISCLOUD_TOKEN }} # Required
-          app_id: "azurajs"
-          glob: ** # All files
