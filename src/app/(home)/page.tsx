@@ -57,7 +57,7 @@ export default function HomePage() {
             <GetStartedButton />
 
             <Link
-              href="https://github.com/0xviny/azurajs"
+              href="https://github.com/azurajs/azura"
               className="h-12 px-8 rounded-full bg-neutral-900 border border-white/10 text-white font-medium hover:bg-neutral-800 transition-all flex items-center gap-2 group w-full sm:w-auto justify-center"
             >
               <Github
@@ -274,7 +274,7 @@ function TestimonialsSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://raw.githubusercontent.com/0xviny/azurajs/main/depoiments/depoiments.json")
+    fetch("https://raw.githubusercontent.com/azurajs/azura/main/depoiments/depoiments.json")
       .then((res) => res.json())
       .then((data) => {
         setTestimonials(data.depoiments || []);

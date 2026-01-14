@@ -6,7 +6,7 @@ export function baseOptions(lang?: string): BaseLayoutProps {
   const currentLang = lang || "en";
 
   return {
-    githubUrl: "https://github.com/0xviny/azurajs",
+    githubUrl: "https://github.com/azurajs/azura",
 
     nav: {
       title: (
