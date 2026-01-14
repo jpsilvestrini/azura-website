@@ -13,33 +13,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      # Define env no job pra garantir disponibilidade no runtime do action/cli
       DISCLOUD_TOKEN: ${{ secrets.DISCLOUD_TOKEN }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node (ensures npx/node available)
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "18"    # ou 20 — use pelo menos 18 se estiver em dúvida
+          node-version: 18
 
-      - name: Debug: Node & npx info
-        run: |
-          node -v
-          npm -v
-          npx -v
-
-      - name: Debug: test discloud-cli authentication (safe)
-        # Não exponha o token: o comando usa a variável de ambiente
-        run: |
-          # tenta mostrar versão / whoami — se token inválido falhará com mensagem clara
-          npx --yes discloud-cli --version || true
-          # whoami só funciona se o token estiver configurado; saída útil para debug
-          npx --yes discloud-cli whoami || true
+      - name: Debug Node
+        run: node -v
 
       - name: Deploy to Discloud
         uses: discloud/deploy-action@v1
         with:
           token: ${{ secrets.DISCLOUD_TOKEN }}
-          app_id: "azurajs"
+          app_id: azurajs
