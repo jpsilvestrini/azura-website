@@ -361,6 +361,11 @@ function PartnersSection() {
       logo: "/partners/simo.png",
       url: "https://simobotlist.online/",
     },
+    {
+      name: "Discloud",
+      logo: "/partners/discloud.png",
+      url: "https://discloud.com/",
+    },
   ];
 
   return (
