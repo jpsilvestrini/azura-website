@@ -372,6 +372,11 @@ function PartnersSection() {
       logo: "/partners/edu-dev.png",
       url: "https://www.youtube.com/channel/UCOiAq87wiESjgifU4JozV1w",
     },
+    {
+      name: "MNN IA",
+      logo: "/partners/mnn.png",
+      url: "https://mnnai.ru/",
+    },
   ];
 
   return (
