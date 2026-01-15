@@ -24,21 +24,58 @@ A forma mais simples de adicionar Swagger à sua aplicação é com uma linha:
 ```typescript
 import { AzuraClient } from "azurajs";
 import { setupSwaggerWithControllers } from "azurajs/swagger";
-import { UserController } from "./controllers/UserController";
+import { Controller, Get, Post, Req, Res } from "azurajs/decorators";
+
+@Controller("/users")
+class UserController {
+  private users = [
+    { id: "1", name: "Alice", email: "alice@example.com" },
+    { id: "2", name: "Bob", email: "bob@example.com" },
+  ];
+
+  @Get("/")
+  async listUsers(@Req() req, @Res() res) {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const start = (page - 1) * limit;
+    const items = this.users.slice(start, start + limit);
+    res.json({ items, total: this.users.length, page });
+  }
+
+  @Get("/:id")
+  async getUser(@Req() req, @Res() res) {
+    const user = this.users.find((u) => u.id === req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(user);
+  }
+
+  @Post("/")
+  async createUser(@Req() req, @Res() res) {
+    const { name, email } = req.body;
+    if (!name || !email) return res.status(400).json({ error: "name and email are required" });
+    const user = { id: String(Date.now()), name, email };
+    this.users.push(user);
+    res.status(201).json(user);
+  }
+}
 
 const app = new AzuraClient();
 
-// Uma linha para configurar tudo!
-setupSwaggerWithControllers(app, {
-  title: "My API",
-  description: "API documentation",
-  version: "1.0.0"
-}, [UserController]);
+setupSwaggerWithControllers(
+  app,
+  {
+    title: "My API",
+    description: "API documentation",
+    version: "1.0.0",
+  },
+  [UserController]
+);
 
-app.listen();
+await app.listen(3000);
 ```
 
 > **Acesse a documentação em:**
+>
 > - **UI Interativa:** `http://localhost:3000/docs`
 > - **OpenAPI JSON:** `http://localhost:3000/api-spec.json`
 
@@ -49,51 +86,81 @@ app.listen();
 O decorator `@Swagger` unifica **toda** a documentação em um único lugar, tornando muito mais fácil e intuitivo documentar suas APIs:
 
 ```typescript
-import { Controller, Get, Post } from "azurajs/decorators";
-import { Swagger } from "azurajs/swagger";
+import { AzuraClient } from "azurajs";
+import { Controller, Get, Post, Req, Res } from "azurajs/decorators";
+import { Swagger, setupSwaggerWithControllers } from "azurajs/swagger";
 
-@Controller("/users")
-class UserController {
+@Controller("/products")
+class ProductController {
+  private products = [
+    { id: "p1", name: "Laptop", price: 1299.99 },
+    { id: "p2", name: "Mouse", price: 29.99 },
+  ];
+
+  @Get("/")
+  @Swagger({
+    summary: "Lista produtos",
+    description: "Retorna lista paginada de produtos",
+    tags: ["Products"],
+    parameters: [
+      { name: "page", in: "query", schema: { type: "number" }, example: 1 },
+      { name: "limit", in: "query", schema: { type: "number" }, example: 10 },
+    ],
+    responses: {
+      200: {
+        description: "Lista de produtos",
+        example: [
+          { id: "p1", name: "Laptop", price: 1299.99 },
+          { id: "p2", name: "Mouse", price: 29.99 },
+        ],
+      },
+    },
+  })
+  async list(@Req() req, @Res() res) {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const items = this.products.slice((page - 1) * limit, page * limit);
+    res.json(items);
+  }
+
   @Get("/:id")
   @Swagger({
-    summary: "Busca usuário por ID",
-    description: "Retorna informações detalhadas de um usuário específico",
-    tags: ["Users"],
+    summary: "Busca produto por ID",
+    description: "Retorna informações detalhadas de um produto",
+    tags: ["Products"],
     parameters: [
       {
         name: "id",
         in: "path",
-        description: "ID do usuário",
+        description: "ID do produto",
         required: true,
         schema: { type: "string" },
-        example: "123"
-      }
+        example: "p1",
+      },
     ],
     responses: {
       200: {
-        description: "Usuário encontrado",
-        example: { 
-          id: "123", 
-          name: "John Doe",
-          email: "john@example.com"
-        }
+        description: "Produto encontrado",
+        example: { id: "p1", name: "Laptop", price: 1299.99 },
       },
       404: {
-        description: "Usuário não encontrado",
-        example: { error: "User not found" }
-      }
-    }
+        description: "Produto não encontrado",
+        example: { error: "Product not found" },
+      },
+    },
   })
-  async getUser(@Req() req, @Res() res) {
-    res.json({ id: req.params.id, name: "John Doe" });
+  async get(@Req() req, @Res() res) {
+    const product = this.products.find((p) => p.id === req.params.id);
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    res.json(product);
   }
 
   @Post("/")
   @Swagger({
-    summary: "Cria novo usuário",
-    tags: ["Users"],
+    summary: "Cria novo produto",
+    tags: ["Products"],
     requestBody: {
-      description: "Dados do usuário",
+      description: "Dados do produto",
       required: true,
       content: {
         "application/json": {
@@ -101,39 +168,52 @@ class UserController {
             type: "object",
             properties: {
               name: { type: "string" },
-              email: { type: "string", format: "email" }
+              price: { type: "number" },
             },
-            required: ["name", "email"]
+            required: ["name", "price"],
           },
-          example: {
-            name: "Jane Doe",
-            email: "jane@example.com"
-          }
-        }
-      }
+          example: { name: "Keyboard", price: 79.99 },
+        },
+      },
     },
     responses: {
       201: {
-        description: "Usuário criado com sucesso",
-        example: { 
-          id: 456, 
-          name: "Jane Doe",
-          email: "jane@example.com"
-        }
+        description: "Produto criado",
+        example: { id: "p3", name: "Keyboard", price: 79.99 },
       },
       400: {
         description: "Dados inválidos",
-        example: { error: "Invalid data" }
-      }
-    }
+        example: { error: "Invalid data" },
+      },
+    },
   })
-  async createUser(@Req() req, @Res() res) {
-    res.status(201).json(req.body);
+  async create(@Req() req, @Res() res) {
+    const { name, price } = req.body;
+    if (!name || typeof price !== "number") return res.status(400).json({ error: "Invalid data" });
+    const newProduct = { id: `p${Date.now()}`, name, price };
+    this.products.push(newProduct);
+    res.status(201).json(newProduct);
   }
 }
+
+const app = new AzuraClient();
+
+setupSwaggerWithControllers(
+  app,
+  {
+    title: "API Produtos",
+    description: "Documentação automática com decorators",
+    version: "1.0.0",
+    tags: [{ name: "Products", description: "Gerenciamento de produtos" }],
+  },
+  [ProductController]
+);
+
+await app.listen(3000);
 ```
 
 **Vantagens do @Swagger:**
+
 - ✅ **Tudo em um lugar** - Não precisa usar múltiplos decorators
 - ✅ **Mais legível** - Configuração agrupada e organizada
 - ✅ **Menos código** - Uma única declaração ao invés de 4-5 decorators
@@ -148,151 +228,156 @@ Se preferir maior granularidade, você ainda pode usar os decorators individuais
 
 #### @ApiDoc()
 
-Documenta informações básicas do endpoint:
-
 ```typescript
-import { Controller, Get } from "azurajs/decorators";
+import { Controller, Get, Req, Res } from "azurajs/decorators";
 import { ApiDoc } from "azurajs/swagger";
 
-@Controller("/users")
-class UserController {
+@Controller("/profile")
+class ProfileController {
   @Get("/:id")
   @ApiDoc({
-    summary: "Get user by ID",
-    description: "Retrieve detailed information about a specific user"
+    summary: "Get profile by ID",
+    description: "Retrieve public profile information for a user",
   })
-  async getUser(@Req() req, @Res() res) {
-    res.json({ id: req.params.id, name: "John Doe" });
+  async getProfile(@Req() req, @Res() res) {
+    const profiles = {
+      "1": { id: "1", displayName: "vinicius", bio: "Fullstack dev" },
+    };
+    const profile = profiles[req.params.id];
+    if (!profile) return res.status(404).json({ error: "Not found" });
+    res.json(profile);
   }
 }
 ```
 
 ### @ApiResponse()
 
-Define as respostas possíveis do endpoint:
-
 ```typescript
-@Get("/:id")
-@ApiResponse(200, "User found", {
-  example: { 
-    id: 1, 
-    name: "John Doe", 
-    email: "john@example.com" 
+import { Get } from "azurajs/decorators";
+import { ApiResponse } from "azurajs/swagger";
+
+class AccountController {
+  @Get("/account")
+  @ApiResponse(200, "User account", {
+    example: { id: "1", email: "user@example.com", plan: "pro" },
+  })
+  @ApiResponse(401, "Unauthorized", { example: { error: "Unauthorized" } })
+  async account(req, res) {
+    const user = { id: "1", email: "user@example.com", plan: "pro" };
+    res.json(user);
   }
-})
-@ApiResponse(404, "User not found", {
-  example: { error: "User not found" }
-})
-async getUser(@Req() req, @Res() res) {
-  // ...
 }
 ```
 
 ### @ApiParameter()
 
-Documenta parâmetros da requisição:
-
 ```typescript
-@Get("/:id")
-@ApiParameter("id", "path", {
-  description: "User ID",
-  required: true,
-  schema: { type: "integer" },
-  example: 123
-})
-async getUser(@Req() req, @Res() res) {
-  // ...
+import { Get } from "azurajs/decorators";
+import { ApiParameter } from "azurajs/swagger";
+
+class OrdersController {
+  @Get("/:orderId")
+  @ApiParameter("orderId", "path", {
+    description: "Order ID",
+    required: true,
+    schema: { type: "string" },
+    example: "ord_123",
+  })
+  async getOrder(req, res) {
+    const orders = { ord_123: { id: "ord_123", total: 199.9 } };
+    const order = orders[req.params.orderId];
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    res.json(order);
+  }
 }
 ```
 
-**Tipos de parâmetros:**
-- `path` - Parâmetros na URL (`/users/:id`)
-- `query` - Query strings (`/users?page=1`)
-- `header` - Headers HTTP
-- `cookie` - Cookies
-
 ### @ApiBody()
 
-Documenta o corpo da requisição:
-
 ```typescript
-@Post("/")
-@ApiBody({
-  description: "User data",
-  required: true,
-  example: {
-    name: "Jane Doe",
-    email: "jane@example.com",
-    age: 25
+import { Post } from "azurajs/decorators";
+import { ApiBody } from "azurajs/swagger";
+
+class AuthController {
+  @Post("/login")
+  @ApiBody({
+    description: "Login payload",
+    required: true,
+    example: { email: "user@example.com", password: "secret" },
+  })
+  async login(req, res) {
+    const { email, password } = req.body;
+    if (email === "user@example.com" && password === "secret") {
+      return res.json({ token: "jwt.token.here" });
+    }
+    res.status(401).json({ error: "Invalid credentials" });
   }
-})
-async createUser(@Req() req, @Res() res) {
-  res.status(201).json(req.body);
 }
 ```
 
 ### @ApiTags()
 
-Organiza endpoints por tags:
-
 ```typescript
-@Controller("/users")
-@ApiTags("Users")
-class UserController {
-  // Todos os endpoints terão a tag "Users"
-}
+import { Controller } from "azurajs/decorators";
+import { ApiTags } from "azurajs/swagger";
 
-// Ou em endpoints específicos:
-@Get("/")
-@ApiTags("Users", "Public")
-async listUsers() {
-  // ...
+@Controller("/admin")
+@ApiTags("Admin")
+class AdminController {
+  // endpoints with Admin tag
 }
 ```
 
 ### @ApiSecurity()
 
-Especifica requisitos de autenticação:
-
 ```typescript
-@Get("/profile")
-@ApiSecurity("bearerAuth")
-async getProfile(@Req() req, @Res() res) {
-  // Endpoint protegido
+import { Get } from "azurajs/decorators";
+import { ApiSecurity } from "azurajs/swagger";
+
+class MeController {
+  @Get("/me")
+  @ApiSecurity("bearerAuth")
+  async me(req, res) {
+    res.json({ id: "1", email: "user@example.com" });
+  }
 }
 ```
 
 **Configurando security schemes:**
 
 ```typescript
-setupSwaggerWithControllers(app, {
-  title: "My API",
-  version: "1.0.0",
-  securitySchemes: {
-    bearerAuth: {
-      type: "http",
-      scheme: "bearer",
-      bearerFormat: "JWT"
+setupSwaggerWithControllers(
+  app,
+  {
+    title: "My API",
+    version: "1.0.0",
+    security: [{ bearerAuth: [] }],
+    tags: [],
+    servers: [],
+    contact: {},
+    license: { name: "MIT" },
+    securitySchemes: {
+      bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT", description: "JWT token" },
+      apiKey: { type: "apiKey", in: "header", name: "X-API-Key" },
     },
-    apiKey: {
-      type: "apiKey",
-      in: "header",
-      name: "X-API-Key"
-    }
-  }
-}, [UserController]);
+  },
+  [UserController]
+);
 ```
 
 ### @ApiDeprecated()
 
-Marca endpoints como deprecados:
-
 ```typescript
-@Get("/old-endpoint")
-@ApiDeprecated()
-@ApiDoc({ summary: "Old endpoint (use /new-endpoint instead)" })
-async oldEndpoint(@Req() req, @Res() res) {
-  // ...
+import { Get } from "azurajs/decorators";
+import { ApiDeprecated, ApiDoc } from "azurajs/swagger";
+
+class LegacyController {
+  @Get("/legacy")
+  @ApiDeprecated()
+  @ApiDoc({ summary: "Legacy endpoint", description: "Use /v2/new instead" })
+  async legacy(req, res) {
+    res.json({ message: "This endpoint is deprecated" });
+  }
 }
 ```
 
@@ -305,42 +390,51 @@ import { AzuraClient } from "azurajs";
 import { setupSwagger, SwaggerGenerator } from "azurajs/swagger";
 
 const app = new AzuraClient();
-
-// Criar gerador Swagger
 const swagger = new SwaggerGenerator({
   title: "API Simples",
   description: "API documentada de forma simples",
   version: "1.0.0",
   tags: [
     { name: "Users", description: "Gerenciamento de usuários" },
-    { name: "Binary", description: "Operações de codificação" }
-  ]
+    { name: "Utils", description: "Utilitários" },
+  ],
 });
 
-// Rota GET com query parameter
-app.get("/binary/encode", (req, res) => {
-  const text = req.query.q;
-  if (!text) {
-    return res.status(400).json({ error: "Query 'q' is required" });
-  }
+const users = [
+  { id: "1", name: "Mariana", email: "mariana@example.com" },
+  { id: "2", name: "Carlos", email: "carlos@example.com" },
+];
 
-  const binary = text.split("").map(c => 
-    c.charCodeAt(0).toString(2).padStart(8, "0")
-  ).join("");
-
-  res.json({
-    input: text,
-    output: binary
-  });
+app.get("/users", (req, res) => {
+  res.json(users);
 });
 
-// Documentar com addDoc() - FÁCIL! ⭐
 swagger.addDoc({
   method: "GET",
-  path: "/binary/encode",
-  summary: "Codifica texto em binário",
-  description: "Converte qualquer texto para representação binária",
-  tags: ["Binary"],
+  path: "/users",
+  summary: "Lista usuários",
+  description: "Retorna todos os usuários cadastrados",
+  tags: ["Users"],
+  responses: {
+    200: {
+      description: "Lista de usuários",
+      example: users,
+    },
+  },
+});
+
+app.get("/utils/encode", (req, res) => {
+  const text = req.query.q || "";
+  const base64 = Buffer.from(String(text)).toString("base64");
+  res.json({ input: text, output: base64 });
+});
+
+swagger.addDoc({
+  method: "GET",
+  path: "/utils/encode",
+  summary: "Base64 encode",
+  description: "Converte texto para Base64",
+  tags: ["Utils"],
   parameters: [
     {
       name: "q",
@@ -348,27 +442,18 @@ swagger.addDoc({
       description: "Texto a ser codificado",
       required: true,
       schema: { type: "string" },
-      example: "Hello"
-    }
+      example: "hello",
+    },
   ],
   responses: {
-    200: {
-      description: "Texto codificado com sucesso",
-      example: {
-        input: "Hello",
-        output: "0100100001100101011011000110110001101111"
-      }
-    },
-    400: {
-      description: "Parâmetro ausente",
-      example: { error: "Query 'q' is required" }
-    }
-  }
+    200: { description: "Texto codificado", example: { input: "hello", output: "aGVsbG8=" } },
+    400: { description: "Parâmetro ausente", example: { error: "Query 'q' is required" } },
+  },
 });
 
-// Rota POST com body
 app.post("/users", (req, res) => {
-  const newUser = { id: Date.now(), ...req.body };
+  const newUser = { id: String(Date.now()), ...req.body };
+  users.push(newUser);
   res.status(201).json(newUser);
 });
 
@@ -380,65 +465,27 @@ swagger.addDoc({
   requestBody: {
     description: "Dados do usuário",
     required: true,
-    example: {
-      name: "João Silva",
-      email: "joao@example.com"
-    }
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          properties: { name: { type: "string" }, email: { type: "string" } },
+          required: ["name", "email"],
+        },
+        examples: { default: { value: { name: "João Silva", email: "joao@example.com" } } },
+      },
+    },
   },
   responses: {
     201: {
       description: "Usuário criado",
-      example: {
-        id: 1234567890,
-        name: "João Silva",
-        email: "joao@example.com"
-      }
-    }
-  }
-});
-
-// Rota GET com path parameter
-app.get("/users/:id", (req, res) => {
-  res.json({
-    id: req.params.id,
-    name: "John Doe",
-    email: "john@example.com"
-  });
-});
-
-swagger.addDoc({
-  method: "GET",
-  path: "/users/:id",
-  summary: "Busca usuário por ID",
-  tags: ["Users"],
-  parameters: [
-    {
-      name: "id",
-      in: "path",
-      description: "ID do usuário",
-      required: true,
-      schema: { type: "string" },
-      example: "123"
-    }
-  ],
-  responses: {
-    200: {
-      description: "Usuário encontrado",
-      example: {
-        id: "123",
-        name: "John Doe",
-        email: "john@example.com"
-      }
+      example: { id: "123", name: "João Silva", email: "joao@example.com" },
     },
-    404: {
-      description: "Usuário não encontrado"
-    }
-  }
+    400: { description: "Dados inválidos", example: { error: "Invalid data" } },
+  },
 });
 
-// Setup Swagger UI
 setupSwagger(app, swagger);
-
 app.listen(3000).then(() => {
   console.log("🚀 Server: http://localhost:3000");
   console.log("📚 Docs: http://localhost:3000/docs");
@@ -446,6 +493,7 @@ app.listen(3000).then(() => {
 ```
 
 **Vantagens do `addDoc()`:**
+
 - ✅ **JavaScript puro** - Funciona sem TypeScript ou decorators
 - ✅ **Simples** - Menos verboso que SwaggerHelpers.createResponse
 - ✅ **Automático** - Gera responses OpenAPI a partir de exemplos
@@ -456,131 +504,111 @@ app.listen(3000).then(() => {
 ## Exemplo Completo (TypeScript com Decorators)
 
 ```typescript
-import { Controller, Get, Post, Put, Delete, Req, Res } from "azurajs/decorators";
+import { Controller, Get, Post, Delete, Req, Res } from "azurajs/decorators";
 import { Swagger } from "azurajs/swagger";
 
-@Controller("/users")
-class UserController {
+@Controller("/todos")
+class TodoController {
+  private todos = [
+    { id: "t1", title: "Comprar leite", completed: false },
+    { id: "t2", title: "Enviar relatório", completed: true },
+  ];
+
   @Get("/")
   @Swagger({
-    summary: "Lista todos os usuários",
-    tags: ["Users"],
-    parameters: [
-      {
-        name: "page",
-        in: "query",
-        schema: { type: "number" },
-        example: 1
-      },
-      {
-        name: "limit",
-        in: "query",
-        schema: { type: "number" },
-        example: 10
-      }
-    ],
+    summary: "Lista todas as tasks",
+    tags: ["Todos"],
+    parameters: [{ name: "completed", in: "query", schema: { type: "boolean" }, example: false }],
     responses: {
       200: {
-        description: "Lista de usuários",
+        description: "Lista de tasks",
         example: [
-          { id: 1, name: "John Doe" },
-          { id: 2, name: "Jane Smith" }
-        ]
-      }
-    }
+          { id: "t1", title: "Comprar leite", completed: false },
+          { id: "t2", title: "Enviar relatório", completed: true },
+        ],
+      },
+    },
   })
-  async listUsers(@Req() req, @Res() res) {
-    res.json([
-      { id: 1, name: "John Doe" },
-      { id: 2, name: "Jane Smith" }
-    ]);
+  async list(@Req() req, @Res() res) {
+    const completed = req.query.completed;
+    if (typeof completed !== "undefined") {
+      const filtered = this.todos.filter((t) => String(t.completed) === String(completed));
+      return res.json(filtered);
+    }
+    res.json(this.todos);
   }
 
   @Get("/:id")
   @Swagger({
-    summary: "Busca usuário por ID",
-    tags: ["Users"],
+    summary: "Busca task por ID",
+    tags: ["Todos"],
     parameters: [
-      {
-        name: "id",
-        in: "path",
-        required: true,
-        schema: { type: "string" },
-        example: "123"
-      }
+      { name: "id", in: "path", required: true, schema: { type: "string" }, example: "t1" },
     ],
     responses: {
       200: {
-        description: "Usuário encontrado",
-        example: { id: "123", name: "John Doe", email: "john@example.com" }
+        description: "Task encontrada",
+        example: { id: "t1", title: "Comprar leite", completed: false },
       },
-      404: {
-        description: "Usuário não encontrado"
-      }
-    }
+      404: { description: "Task não encontrada", example: { error: "Not found" } },
+    },
   })
-  async getUser(@Req() req, @Res() res) {
-    res.json({ id: req.params.id, name: "John Doe" });
+  async get(@Req() req, @Res() res) {
+    const todo = this.todos.find((t) => t.id === req.params.id);
+    if (!todo) return res.status(404).json({ error: "Not found" });
+    res.json(todo);
   }
 
   @Post("/")
   @Swagger({
-    summary: "Cria novo usuário",
-    tags: ["Users"],
+    summary: "Cria nova task",
+    tags: ["Todos"],
     requestBody: {
-      description: "Dados do usuário",
+      description: "Dados da task",
       required: true,
       content: {
         "application/json": {
           schema: {
             type: "object",
-            properties: {
-              name: { type: "string" },
-              email: { type: "string", format: "email" }
-            },
-            required: ["name", "email"]
+            properties: { title: { type: "string" }, completed: { type: "boolean" } },
+            required: ["title"],
           },
-          example: {
-            name: "Jane Doe",
-            email: "jane@example.com"
-          }
-        }
-      }
+          example: { title: "Estudar AzuraJS", completed: false },
+        },
+      },
     },
     responses: {
       201: {
-        description: "Usuário criado",
-        example: { id: 123, name: "Jane Doe", email: "jane@example.com" }
-      }
-    }
+        description: "Task criada",
+        example: { id: "t3", title: "Estudar AzuraJS", completed: false },
+      },
+      400: { description: "Dados inválidos", example: { error: "Invalid data" } },
+    },
   })
-  async createUser(@Req() req, @Res() res) {
-    res.status(201).json(req.body);
+  async create(@Req() req, @Res() res) {
+    const { title, completed = false } = req.body;
+    if (!title) return res.status(400).json({ error: "title is required" });
+    const newTodo = { id: `t${Date.now()}`, title, completed };
+    this.todos.push(newTodo);
+    res.status(201).json(newTodo);
   }
 
   @Delete("/:id")
   @Swagger({
-    summary: "Deleta usuário",
-    tags: ["Users"],
+    summary: "Deleta task",
+    tags: ["Todos"],
     parameters: [
-      {
-        name: "id",
-        in: "path",
-        required: true,
-        schema: { type: "string" },
-        example: "123"
-      }
+      { name: "id", in: "path", required: true, schema: { type: "string" }, example: "t1" },
     ],
     responses: {
-      204: {
-        description: "Usuário deletado"
-      },
-      404: {
-        description: "Usuário não encontrado"
-      }
-    }
+      204: { description: "Task deletada" },
+      404: { description: "Task não encontrada", example: { error: "Not found" } },
+    },
   })
-  async deleteUser(@Req() req, @Res() res) {
+  async remove(@Req() req, @Res() res) {
+    const index = this.todos.findIndex((t) => t.id === req.params.id);
+    if (index === -1) return res.status(404).json({ error: "Not found" });
+    this.todos.splice(index, 1);
     res.status(204).send();
   }
 }
@@ -593,113 +621,97 @@ class UserController {
 Se preferir usar os decorators tradicionais separadamente:
 
 ```typescript
-import { 
-  ApiDoc, 
-  ApiResponse, 
-  ApiParameter, 
-  ApiBody, 
-  ApiTags 
-} from "azurajs/swagger";
+import { Controller, Get, Post, Put, Delete, Req, Res } from "azurajs/decorators";
+import { ApiDoc, ApiResponse, ApiParameter, ApiBody, ApiTags } from "azurajs/swagger";
 
-@Controller("/users")
-@ApiTags("Users")
-class UserController {
+@Controller("/customers")
+@ApiTags("Customers")
+class CustomersController {
+  private customers = [{ id: "c1", name: "Empresa A", contact: "contato@empresa.com" }];
+
   @Get("/")
-  @ApiDoc({
-    summary: "List all users",
-    description: "Retrieve a paginated list of users"
-  })
+  @ApiDoc({ summary: "List all customers", description: "Retrieve a paginated list of customers" })
   @ApiParameter("page", "query", {
     description: "Page number",
-    schema: { type: "integer", default: 1 }
+    schema: { type: "integer", default: 1 },
   })
   @ApiParameter("limit", "query", {
     description: "Items per page",
-    schema: { type: "integer", default: 10 }
+    schema: { type: "integer", default: 10 },
   })
   @ApiResponse(200, "Success", {
-    example: {
-      users: [
-        { id: 1, name: "John Doe" },
-        { id: 2, name: "Jane Doe" }
-      ],
-      total: 2,
-      page: 1
-    }
+    example: { customers: [{ id: "c1", name: "Empresa A" }], total: 1, page: 1 },
   })
-  async listUsers(@Req() req, @Res() res) {
-    const page = req.query.page || 1;
-    const limit = req.query.limit || 10;
-    res.json({ users: [], total: 0, page });
+  async list(@Req() req, @Res() res) {
+    res.json({
+      customers: this.customers,
+      total: this.customers.length,
+      page: req.query.page || 1,
+    });
   }
 
   @Get("/:id")
-  @ApiDoc({
-    summary: "Get user by ID",
-    description: "Retrieve detailed user information"
-  })
+  @ApiDoc({ summary: "Get customer by ID", description: "Retrieve detailed customer information" })
   @ApiParameter("id", "path", {
-    description: "User ID",
+    description: "Customer ID",
     required: true,
-    schema: { type: "integer" }
+    schema: { type: "string" },
   })
-  @ApiResponse(200, "User found", {
-    example: { id: 1, name: "John Doe", email: "john@example.com" }
+  @ApiResponse(200, "Customer found", {
+    example: { id: "c1", name: "Empresa A", contact: "contato@empresa.com" },
   })
-  @ApiResponse(404, "User not found")
-  async getUser(@Req() req, @Res() res) {
-    const userId = req.params.id;
-    res.json({ id: userId, name: "John Doe" });
+  @ApiResponse(404, "Customer not found")
+  async get(@Req() req, @Res() res) {
+    const customer = this.customers.find((c) => c.id === req.params.id);
+    if (!customer) return res.status(404).json({ error: "Customer not found" });
+    res.json(customer);
   }
 
   @Post("/")
-  @ApiDoc({
-    summary: "Create new user",
-    description: "Create a new user in the system"
-  })
+  @ApiDoc({ summary: "Create new customer", description: "Create a new customer in the system" })
   @ApiBody({
-    description: "User data",
+    description: "Customer data",
     required: true,
-    example: {
-      name: "Jane Doe",
-      email: "jane@example.com",
-      age: 25
-    }
+    example: { name: "Empresa B", contact: "b@empresa.com" },
   })
-  @ApiResponse(201, "User created", {
-    example: { id: 3, name: "Jane Doe", email: "jane@example.com" }
+  @ApiResponse(201, "Customer created", {
+    example: { id: "c2", name: "Empresa B", contact: "b@empresa.com" },
   })
   @ApiResponse(400, "Invalid data")
-  async createUser(@Req() req, @Res() res) {
-    res.status(201).json({ id: 3, ...req.body });
+  async create(@Req() req, @Res() res) {
+    const { name, contact } = req.body;
+    if (!name || !contact) return res.status(400).json({ error: "Invalid data" });
+    const newCustomer = { id: `c${Date.now()}`, name, contact };
+    this.customers.push(newCustomer);
+    res.status(201).json(newCustomer);
   }
 
   @Put("/:id")
-  @ApiDoc({ summary: "Update user" })
+  @ApiDoc({ summary: "Update customer" })
   @ApiParameter("id", "path", {
-    description: "User ID",
+    description: "Customer ID",
     required: true,
-    schema: { type: "integer" }
+    schema: { type: "string" },
   })
-  @ApiBody({
-    description: "Updated user data",
-    example: { name: "John Updated" }
-  })
-  @ApiResponse(200, "User updated")
-  @ApiResponse(404, "User not found")
-  async updateUser(@Req() req, @Res() res) {
-    res.json({ id: req.params.id, ...req.body });
+  @ApiBody({ description: "Updated customer data", example: { name: "Empresa A Atualizada" } })
+  @ApiResponse(200, "Customer updated")
+  @ApiResponse(404, "Customer not found")
+  async update(@Req() req, @Res() res) {
+    const customer = this.customers.find((c) => c.id === req.params.id);
+    if (!customer) return res.status(404).json({ error: "Customer not found" });
+    Object.assign(customer, req.body);
+    res.json(customer);
   }
 
   @Delete("/:id")
-  @ApiDoc({ summary: "Delete user" })
-  @ApiParameter("id", "path", {
-    description: "User ID",
-    required: true
-  })
-  @ApiResponse(204, "User deleted")
-  @ApiResponse(404, "User not found")
-  async deleteUser(@Req() req, @Res() res) {
+  @ApiDoc({ summary: "Delete customer" })
+  @ApiParameter("id", "path", { description: "Customer ID", required: true })
+  @ApiResponse(204, "Customer deleted")
+  @ApiResponse(404, "Customer not found")
+  async remove(@Req() req, @Res() res) {
+    const idx = this.customers.findIndex((c) => c.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: "Customer not found" });
+    this.customers.splice(idx, 1);
     res.status(204).send();
   }
 }
@@ -712,22 +724,26 @@ class UserController {
 A interface Swagger do AzuraJS oferece:
 
 ### 🎨 Design Moderno
+
 - Dark mode premium (inspirado em Stripe/Vercel)
 - Sidebar com navegação por tags
 - Cards expansíveis para cada endpoint
 - Syntax highlighting para código
 
 ### 🔍 Busca em Tempo Real
+
 - Pesquise endpoints por método ou path
 - Filtragem instantânea na sidebar
 
 ### 🚀 Try It Out
+
 - Teste endpoints diretamente na UI
 - Preencha parâmetros, query strings e body
 - Veja a resposta em tempo real
 - Exibe tempo de resposta
 
 ### 📋 Funcionalidades
+
 - Copiar código com um clique
 - Visualização de status codes
 - Exemplos de request/response
@@ -739,79 +755,80 @@ A interface Swagger do AzuraJS oferece:
 ### Múltiplos Servidores
 
 ```typescript
-setupSwaggerWithControllers(app, {
-  title: "My API",
-  version: "1.0.0",
-  servers: [
-    {
-      url: "http://localhost:3000",
-      description: "Development"
-    },
-    {
-      url: "https://api.example.com",
-      description: "Production"
-    },
-    {
-      url: "https://staging.example.com",
-      description: "Staging"
-    }
-  ]
-}, [UserController]);
+setupSwaggerWithControllers(
+  app,
+  {
+    title: "My API",
+    version: "1.0.0",
+    servers: [
+      { url: "http://localhost:3000", description: "Development" },
+      { url: "https://api.example.com", description: "Production" },
+      { url: "https://staging.example.com", description: "Staging" },
+    ],
+  },
+  [UserController]
+);
 ```
 
 ### Security Schemes
 
 ```typescript
-setupSwaggerWithControllers(app, {
-  title: "My API",
-  version: "1.0.0",
-  securitySchemes: {
-    bearerAuth: {
-      type: "http",
-      scheme: "bearer",
-      bearerFormat: "JWT",
-      description: "JWT token from /auth/login"
+setupSwaggerWithControllers(
+  app,
+  {
+    title: "My API",
+    version: "1.0.0",
+    security: [{ bearerAuth: [] }],
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "JWT token from /auth/login",
+      },
+      apiKey: {
+        type: "apiKey",
+        in: "header",
+        name: "X-API-Key",
+        description: "API key from dashboard",
+      },
+      oauth2: {
+        type: "oauth2",
+        flows: {
+          authorizationCode: {
+            authorizationUrl: "https://example.com/oauth/authorize",
+            tokenUrl: "https://example.com/oauth/token",
+            scopes: {
+              "read:users": "Read user data",
+              "write:users": "Modify user data",
+            },
+          },
+        },
+      },
     },
-    apiKey: {
-      type: "apiKey",
-      in: "header",
-      name: "X-API-Key",
-      description: "API key from dashboard"
-    },
-    oauth2: {
-      type: "oauth2",
-      flows: {
-        authorizationCode: {
-          authorizationUrl: "https://example.com/oauth/authorize",
-          tokenUrl: "https://example.com/oauth/token",
-          scopes: {
-            "read:users": "Read user data",
-            "write:users": "Modify user data"
-          }
-        }
-      }
-    }
-  }
-}, [UserController]);
+  },
+  [UserController]
+);
 ```
 
 ### Contact & License
 
 ```typescript
-setupSwaggerWithControllers(app, {
-  title: "My API",
-  description: "Complete API documentation",
-  version: "1.0.0",
-  contact: {
-    name: "API Support",
-    email: "support@example.com",
-    url: "https://example.com/support"
+setupSwaggerWithControllers(
+  app,
+  {
+    title: "My API",
+    description: "Complete API documentation",
+    version: "1.0.0",
+    contact: {
+      name: "API Support",
+      email: "support@example.com",
+      url: "https://example.com/support",
+    },
+    license: { name: "MIT", url: "https://opensource.org/licenses/MIT" },
   },
-  license: {
-    name: "MIT",
-    url: "https://opensource.org/licenses/MIT"
-  }
-}, [UserController]);
+  [UserController]
+);
 ```
 
 ## Setup Manual (Avançado)
@@ -820,34 +837,35 @@ Se você precisa de mais controle, pode configurar manualmente:
 
 ```typescript
 import { AzuraClient } from "azurajs";
-import { SwaggerIntegration, SwaggerGenerator } from "azurajs/swagger";
+import { SwaggerIntegration } from "azurajs/swagger";
+import { SwaggerGenerator } from "azurajs/swagger";
 import { getControllerMetadata } from "azurajs/decorators";
+import UserController from "./controllers/UserController";
 
 const app = new AzuraClient();
 
-// Criar gerador
 const generator = new SwaggerGenerator({
   title: "My API",
-  version: "1.0.0"
+  version: "1.0.0",
+  description: "Manual Swagger generator",
 });
 
-// Adicionar controllers
+const instance = new UserController();
 const metadata = getControllerMetadata(UserController);
-generator.addController(metadata.prefix, metadata.routes);
+if (metadata && metadata.routes && metadata.routes.length) {
+  generator.addController(instance, metadata.routes, metadata.prefix);
+}
 
-// Configurar rotas Swagger
-const swagger = new SwaggerIntegration(generator, {
+const integration = new SwaggerIntegration(app, {
   title: "My API",
-  version: "1.0.0"
+  version: "1.0.0",
+  path: "/docs",
 });
 
-app.use("/docs", swagger.getUIRoute());
-app.use("/api-spec.json", swagger.getSpecRoute());
-
-// Registrar controllers normalmente
+integration.setup();
 app.registerController(UserController);
 
-app.listen();
+await app.listen(3000);
 ```
 
 ## TypeScript Types
@@ -861,13 +879,13 @@ import type {
   ApiDocMetadata,
   ApiResponseMetadata,
   ParameterObject,
-  SchemaObject
+  SchemaObject,
 } from "azurajs/swagger";
 
 const config: SwaggerConfig = {
   title: "My API",
   version: "1.0.0",
-  servers: [{ url: "http://localhost:3000" }]
+  servers: [{ url: "http://localhost:3000" }],
 };
 ```
 
@@ -880,11 +898,11 @@ Agrupe endpoints relacionados com tags:
 ```typescript
 @Controller("/users")
 @ApiTags("Users", "Management")
-class UserController { }
+class UserController {}
 
 @Controller("/products")
 @ApiTags("Products", "E-commerce")
-class ProductController { }
+class ProductController {}
 ```
 
 ### 2. Forneça Exemplos Detalhados
@@ -948,6 +966,7 @@ Informe quando endpoints estão deprecados:
 ### Documentação não aparece
 
 Certifique-se de que:
+
 1. Você importou os decorators de `azurajs/swagger`
 2. Os decorators estão aplicados nos métodos
 3. Os controllers foram passados para `setupSwaggerWithControllers()`
@@ -955,6 +974,7 @@ Certifique-se de que:
 ### Try It Out não funciona
 
 Verifique:
+
 1. CORS está configurado corretamente
 2. O servidor está rodando na URL esperada
 3. Os parâmetros estão sendo preenchidos corretamente
