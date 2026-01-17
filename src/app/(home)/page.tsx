@@ -348,9 +348,9 @@ interface Partner {
 function PartnersSection() {
   const partners: Partner[] = [
     {
-      name: "Cheetah Solutions",
-      logo: "/partners/cheetah.png",
-      url: "https://www.cheetahsolutions.com.br/",
+      name: "Rincko Dev",
+      logo: "/partners/rincko-dev.png",
+      url: "https://www.youtube.com/channel/UCLutaD99Bd75axcoNwyU-iA",
     },
     {
       name: "Simo",
