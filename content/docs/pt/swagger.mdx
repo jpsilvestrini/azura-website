@@ -1,6 +1,7 @@
 ---
 title: Swagger / OpenAPI
 description: Documentação completa de API com interface moderna e interativa
+icon: Book
 ---
 
 # Swagger / OpenAPI 3.0
@@ -71,7 +72,7 @@ setupSwaggerWithControllers(
   [UserController]
 );
 
-await app.listen(3000);
+await app.listen();
 ```
 
 > **Acesse a documentação em:**
@@ -209,7 +210,7 @@ setupSwaggerWithControllers(
   [ProductController]
 );
 
-await app.listen(3000);
+await app.listen();
 ```
 
 **Vantagens do @Swagger:**
@@ -486,10 +487,9 @@ swagger.addDoc({
 });
 
 setupSwagger(app, swagger);
-app.listen(3000).then(() => {
-  console.log("🚀 Server: http://localhost:3000");
-  console.log("📚 Docs: http://localhost:3000/docs");
-});
+await app.listen();
+console.log("🚀 Server: http://localhost:3000");
+console.log("📚 Docs: http://localhost:3000/docs");
 ```
 
 **Vantagens do `addDoc()`:**
@@ -865,7 +865,7 @@ const integration = new SwaggerIntegration(app, {
 integration.setup();
 app.registerController(UserController);
 
-await app.listen(3000);
+await app.listen();
 ```
 
 ## TypeScript Types

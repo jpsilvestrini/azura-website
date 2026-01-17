@@ -387,7 +387,7 @@ Agora vamos criar um controller que gerencia usuários. O AzuraJS suporta duas a
     });
 
     // Inicia o servidor
-    app.listen();
+    await app.listen();
     ```
 
     <Callout type="tip" title="💡 Dica">
@@ -422,7 +422,7 @@ Agora vamos criar um controller que gerencia usuários. O AzuraJS suporta duas a
     ]);
 
     // Inicia o servidor
-    app.listen().then(() => {
+    await app.listen().then(() => {
       console.log("✅ API pronta para uso!");
     });
     ```
@@ -883,7 +883,7 @@ Agora que você domina o básico, explore recursos mais avançados:
 
 ## 💡 Dicas de Produtividade
 
-### 🔄 Hot Reload no Desenvolvimento
+### 🔄 Auto Reload no Desenvolvimento
 
 Ative reload automático para agilizar o desenvolvimento:
 

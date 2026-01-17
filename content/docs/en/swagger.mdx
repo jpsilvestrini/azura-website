@@ -1,13 +1,14 @@
 ---
 title: Swagger / OpenAPI
 description: Complete API documentation with a modern and interactive interface
+icon: Book
 ---
 
 # Swagger / OpenAPI 3.0
 
-AzuraJS includes full support for API documentation using Swagger/OpenAPI 3.0, featuring a modern dark mode interface and built-in **Try It Out** functionality.
+AzuraJS includes full support for API documentation using Swagger/OpenAPI 3.0, featuring a modern dark mode interface and integrated "Try It Out" functionality.
 
-> **Note:** AzuraJS Swagger automatically generates OpenAPI 3.0 documentation from your controllers and decorators, with no manual configuration required.
+> **Note:** The AzuraJS Swagger system automatically generates OpenAPI 3.0 documentation from your controllers and decorators, without manual configuration.
 
 ## Installation
 
@@ -15,11 +16,12 @@ Swagger is already included in AzuraJS. Just import it from the `azurajs/swagger
 
 ```typescript
 import { setupSwaggerWithControllers } from "azurajs/swagger";
+
 ```
 
 ## Quick Setup
 
-The easiest way to add Swagger to your application is with a single setup call:
+The simplest way to add Swagger to your application is with a single line:
 
 ```typescript
 import { AzuraClient } from "azurajs";
@@ -52,9 +54,7 @@ class UserController {
   @Post("/")
   async createUser(@Req() req, @Res() res) {
     const { name, email } = req.body;
-    if (!name || !email) {
-      return res.status(400).json({ error: "name and email are required" });
-    }
+    if (!name || !email) return res.status(400).json({ error: "name and email are required" });
     const user = { id: String(Date.now()), name, email };
     this.users.push(user);
     res.status(201).json(user);
@@ -73,19 +73,19 @@ setupSwaggerWithControllers(
   [UserController]
 );
 
-await app.listen(3000);
+await app.listen();
+
 ```
 
-**Access the documentation at:**
-
-- **Interactive UI:** `http://localhost:3000/docs`
-- **OpenAPI JSON:** `http://localhost:3000/api-spec.json`
+> **Access the documentation at:**
+> * **Interactive UI:** `http://localhost:3000/docs`
+> * **OpenAPI JSON:** `http://localhost:3000/api-spec.json`
 
 ## Documentation Decorators
 
-### @Swagger() – New Simplified API ⭐
+### @Swagger() - New Simplified API ⭐
 
-The `@Swagger` decorator centralizes **all** documentation in one place, making your API docs easier to read and maintain:
+The `@Swagger` decorator unifies **all** documentation in a single place, making it much easier and more intuitive to document your APIs:
 
 ```typescript
 import { AzuraClient } from "azurajs";
@@ -110,7 +110,7 @@ class ProductController {
     ],
     responses: {
       200: {
-        description: "Product list",
+        description: "List of products",
         example: [
           { id: "p1", name: "Laptop", price: 1299.99 },
           { id: "p2", name: "Mouse", price: 29.99 },
@@ -159,7 +159,7 @@ class ProductController {
 
   @Post("/")
   @Swagger({
-    summary: "Create product",
+    summary: "Create new product",
     tags: ["Products"],
     requestBody: {
       description: "Product data",
@@ -191,9 +191,7 @@ class ProductController {
   })
   async create(@Req() req, @Res() res) {
     const { name, price } = req.body;
-    if (!name || typeof price !== "number") {
-      return res.status(400).json({ error: "Invalid data" });
-    }
+    if (!name || typeof price !== "number") return res.status(400).json({ error: "Invalid data" });
     const newProduct = { id: `p${Date.now()}`, name, price };
     this.products.push(newProduct);
     res.status(201).json(newProduct);
@@ -206,27 +204,30 @@ setupSwaggerWithControllers(
   app,
   {
     title: "Products API",
-    description: "Automatic documentation using decorators",
+    description: "Automatic documentation with decorators",
     version: "1.0.0",
     tags: [{ name: "Products", description: "Product management" }],
   },
   [ProductController]
 );
 
-await app.listen(3000);
+await app.listen();
+
 ```
 
-**Advantages of `@Swagger`:**
+**Advantages of @Swagger:**
 
-- ✅ Everything in one place
-- ✅ Cleaner and more readable
-- ✅ Less boilerplate
-- ✅ Full TypeScript support
-- ✅ Inline examples
+* ✅ **All in one place** - No need to use multiple decorators
+* ✅ **More readable** - Grouped and organized configuration
+* ✅ **Less code** - A single declaration instead of 4-5 decorators
+* ✅ **TypeScript** - Autocomplete and type validation
+* ✅ **Integrated examples** - Define examples directly in the responses
 
 ---
 
 ### Individual Decorators (Traditional API)
+
+If you prefer greater granularity, you can still use the individual decorators:
 
 #### @ApiDoc()
 
@@ -239,7 +240,7 @@ class ProfileController {
   @Get("/:id")
   @ApiDoc({
     summary: "Get profile by ID",
-    description: "Retrieve public profile information",
+    description: "Retrieve public profile information for a user",
   })
   async getProfile(@Req() req, @Res() res) {
     const profiles = {
@@ -250,6 +251,7 @@ class ProfileController {
     res.json(profile);
   }
 }
+
 ```
 
 ### @ApiResponse()
@@ -265,9 +267,11 @@ class AccountController {
   })
   @ApiResponse(401, "Unauthorized", { example: { error: "Unauthorized" } })
   async account(req, res) {
-    res.json({ id: "1", email: "user@example.com", plan: "pro" });
+    const user = { id: "1", email: "user@example.com", plan: "pro" };
+    res.json(user);
   }
 }
+
 ```
 
 ### @ApiParameter()
@@ -291,6 +295,7 @@ class OrdersController {
     res.json(order);
   }
 }
+
 ```
 
 ### @ApiBody()
@@ -314,26 +319,700 @@ class AuthController {
     res.status(401).json({ error: "Invalid credentials" });
   }
 }
+
+```
+
+### @ApiTags()
+
+```typescript
+import { Controller } from "azurajs/decorators";
+import { ApiTags } from "azurajs/swagger";
+
+@Controller("/admin")
+@ApiTags("Admin")
+class AdminController {
+  // endpoints with Admin tag
+}
+
+```
+
+### @ApiSecurity()
+
+```typescript
+import { Get } from "azurajs/decorators";
+import { ApiSecurity } from "azurajs/swagger";
+
+class MeController {
+  @Get("/me")
+  @ApiSecurity("bearerAuth")
+  async me(req, res) {
+    res.json({ id: "1", email: "user@example.com" });
+  }
+}
+
+```
+
+**Configuring security schemes:**
+
+```typescript
+setupSwaggerWithControllers(
+  app,
+  {
+    title: "My API",
+    version: "1.0.0",
+    security: [{ bearerAuth: [] }],
+    tags: [],
+    servers: [],
+    contact: {},
+    license: { name: "MIT" },
+    securitySchemes: {
+      bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT", description: "JWT token" },
+      apiKey: { type: "apiKey", in: "header", name: "X-API-Key" },
+    },
+  },
+  [UserController]
+);
+
+```
+
+### @ApiDeprecated()
+
+```typescript
+import { Get } from "azurajs/decorators";
+import { ApiDeprecated, ApiDoc } from "azurajs/swagger";
+
+class LegacyController {
+  @Get("/legacy")
+  @ApiDeprecated()
+  @ApiDoc({ summary: "Legacy endpoint", description: "Use /v2/new instead" })
+  async legacy(req, res) {
+    res.json({ message: "This endpoint is deprecated" });
+  }
+}
+
+```
+
+## Simple JavaScript (Without Decorators)
+
+If you prefer pure JavaScript or don't want to use decorators, use the `addDoc()` method:
+
+```javascript
+import { AzuraClient } from "azurajs";
+import { setupSwagger, SwaggerGenerator } from "azurajs/swagger";
+
+const app = new AzuraClient();
+const swagger = new SwaggerGenerator({
+  title: "Simple API",
+  description: "API documented simply",
+  version: "1.0.0",
+  tags: [
+    { name: "Users", description: "User management" },
+    { name: "Utils", description: "Utilities" },
+  ],
+});
+
+const users = [
+  { id: "1", name: "Mariana", email: "mariana@example.com" },
+  { id: "2", name: "Carlos", email: "carlos@example.com" },
+];
+
+app.get("/users", (req, res) => {
+  res.json(users);
+});
+
+swagger.addDoc({
+  method: "GET",
+  path: "/users",
+  summary: "List users",
+  description: "Returns all registered users",
+  tags: ["Users"],
+  responses: {
+    200: {
+      description: "List of users",
+      example: users,
+    },
+  },
+});
+
+app.get("/utils/encode", (req, res) => {
+  const text = req.query.q || "";
+  const base64 = Buffer.from(String(text)).toString("base64");
+  res.json({ input: text, output: base64 });
+});
+
+swagger.addDoc({
+  method: "GET",
+  path: "/utils/encode",
+  summary: "Base64 encode",
+  description: "Converts text to Base64",
+  tags: ["Utils"],
+  parameters: [
+    {
+      name: "q",
+      in: "query",
+      description: "Text to be encoded",
+      required: true,
+      schema: { type: "string" },
+      example: "hello",
+    },
+  ],
+  responses: {
+    200: { description: "Encoded text", example: { input: "hello", output: "aGVsbG8=" } },
+    400: { description: "Missing parameter", example: { error: "Query 'q' is required" } },
+  },
+});
+
+app.post("/users", (req, res) => {
+  const newUser = { id: String(Date.now()), ...req.body };
+  users.push(newUser);
+  res.status(201).json(newUser);
+});
+
+swagger.addDoc({
+  method: "POST",
+  path: "/users",
+  summary: "Create new user",
+  tags: ["Users"],
+  requestBody: {
+    description: "User data",
+    required: true,
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          properties: { name: { type: "string" }, email: { type: "string" } },
+          required: ["name", "email"],
+        },
+        examples: { default: { value: { name: "John Doe", email: "john@example.com" } } },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "User created",
+      example: { id: "123", name: "John Doe", email: "john@example.com" },
+    },
+    400: { description: "Invalid data", example: { error: "Invalid data" } },
+  },
+});
+
+setupSwagger(app, swagger);
+await app.listen();
+console.log("🚀 Server: http://localhost:3000");
+console.log("📚 Docs: http://localhost:3000/docs");
+
+```
+
+**Advantages of `addDoc()`:**
+
+* ✅ **Pure JavaScript** - Works without TypeScript or decorators
+* ✅ **Simple** - Less verbose than SwaggerHelpers.createResponse
+* ✅ **Automatic** - Generates OpenAPI responses from examples
+* ✅ **Flexible** - Mix with traditional AzuraJS routes
+
+---
+
+## Complete Example (TypeScript with Decorators)
+
+```typescript
+import { Controller, Get, Post, Delete, Req, Res } from "azurajs/decorators";
+import { Swagger } from "azurajs/swagger";
+
+@Controller("/todos")
+class TodoController {
+  private todos = [
+    { id: "t1", title: "Buy milk", completed: false },
+    { id: "t2", title: "Send report", completed: true },
+  ];
+
+  @Get("/")
+  @Swagger({
+    summary: "List all tasks",
+    tags: ["Todos"],
+    parameters: [{ name: "completed", in: "query", schema: { type: "boolean" }, example: false }],
+    responses: {
+      200: {
+        description: "List of tasks",
+        example: [
+          { id: "t1", title: "Buy milk", completed: false },
+          { id: "t2", title: "Send report", completed: true },
+        ],
+      },
+    },
+  })
+  async list(@Req() req, @Res() res) {
+    const completed = req.query.completed;
+    if (typeof completed !== "undefined") {
+      const filtered = this.todos.filter((t) => String(t.completed) === String(completed));
+      return res.json(filtered);
+    }
+    res.json(this.todos);
+  }
+
+  @Get("/:id")
+  @Swagger({
+    summary: "Get task by ID",
+    tags: ["Todos"],
+    parameters: [
+      { name: "id", in: "path", required: true, schema: { type: "string" }, example: "t1" },
+    ],
+    responses: {
+      200: {
+        description: "Task found",
+        example: { id: "t1", title: "Buy milk", completed: false },
+      },
+      404: { description: "Task not found", example: { error: "Not found" } },
+    },
+  })
+  async get(@Req() req, @Res() res) {
+    const todo = this.todos.find((t) => t.id === req.params.id);
+    if (!todo) return res.status(404).json({ error: "Not found" });
+    res.json(todo);
+  }
+
+  @Post("/")
+  @Swagger({
+    summary: "Create new task",
+    tags: ["Todos"],
+    requestBody: {
+      description: "Task data",
+      required: true,
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: { title: { type: "string" }, completed: { type: "boolean" } },
+            required: ["title"],
+          },
+          example: { title: "Study AzuraJS", completed: false },
+        },
+      },
+    },
+    responses: {
+      201: {
+        description: "Task created",
+        example: { id: "t3", title: "Study AzuraJS", completed: false },
+      },
+      400: { description: "Invalid data", example: { error: "Invalid data" } },
+    },
+  })
+  async create(@Req() req, @Res() res) {
+    const { title, completed = false } = req.body;
+    if (!title) return res.status(400).json({ error: "title is required" });
+    const newTodo = { id: `t${Date.now()}`, title, completed };
+    this.todos.push(newTodo);
+    res.status(201).json(newTodo);
+  }
+
+  @Delete("/:id")
+  @Swagger({
+    summary: "Delete task",
+    tags: ["Todos"],
+    parameters: [
+      { name: "id", in: "path", required: true, schema: { type: "string" }, example: "t1" },
+    ],
+    responses: {
+      204: { description: "Task deleted" },
+      404: { description: "Task not found", example: { error: "Not found" } },
+    },
+  })
+  async remove(@Req() req, @Res() res) {
+    const index = this.todos.findIndex((t) => t.id === req.params.id);
+    if (index === -1) return res.status(404).json({ error: "Not found" });
+    this.todos.splice(index, 1);
+    res.status(204).send();
+  }
+}
+
+```
+
+---
+
+## Individual Decorators - Complete Example
+
+If you prefer using the traditional decorators separately:
+
+```typescript
+import { Controller, Get, Post, Put, Delete, Req, Res } from "azurajs/decorators";
+import { ApiDoc, ApiResponse, ApiParameter, ApiBody, ApiTags } from "azurajs/swagger";
+
+@Controller("/customers")
+@ApiTags("Customers")
+class CustomersController {
+  private customers = [{ id: "c1", name: "Company A", contact: "contact@company.com" }];
+
+  @Get("/")
+  @ApiDoc({ summary: "List all customers", description: "Retrieve a paginated list of customers" })
+  @ApiParameter("page", "query", {
+    description: "Page number",
+    schema: { type: "integer", default: 1 },
+  })
+  @ApiParameter("limit", "query", {
+    description: "Items per page",
+    schema: { type: "integer", default: 10 },
+  })
+  @ApiResponse(200, "Success", {
+    example: { customers: [{ id: "c1", name: "Company A" }], total: 1, page: 1 },
+  })
+  async list(@Req() req, @Res() res) {
+    res.json({
+      customers: this.customers,
+      total: this.customers.length,
+      page: req.query.page || 1,
+    });
+  }
+
+  @Get("/:id")
+  @ApiDoc({ summary: "Get customer by ID", description: "Retrieve detailed customer information" })
+  @ApiParameter("id", "path", {
+    description: "Customer ID",
+    required: true,
+    schema: { type: "string" },
+  })
+  @ApiResponse(200, "Customer found", {
+    example: { id: "c1", name: "Company A", contact: "contact@company.com" },
+  })
+  @ApiResponse(404, "Customer not found")
+  async get(@Req() req, @Res() res) {
+    const customer = this.customers.find((c) => c.id === req.params.id);
+    if (!customer) return res.status(404).json({ error: "Customer not found" });
+    res.json(customer);
+  }
+
+  @Post("/")
+  @ApiDoc({ summary: "Create new customer", description: "Create a new customer in the system" })
+  @ApiBody({
+    description: "Customer data",
+    required: true,
+    example: { name: "Company B", contact: "b@company.com" },
+  })
+  @ApiResponse(201, "Customer created", {
+    example: { id: "c2", name: "Company B", contact: "b@company.com" },
+  })
+  @ApiResponse(400, "Invalid data")
+  async create(@Req() req, @Res() res) {
+    const { name, contact } = req.body;
+    if (!name || !contact) return res.status(400).json({ error: "Invalid data" });
+    const newCustomer = { id: `c${Date.now()}`, name, contact };
+    this.customers.push(newCustomer);
+    res.status(201).json(newCustomer);
+  }
+
+  @Put("/:id")
+  @ApiDoc({ summary: "Update customer" })
+  @ApiParameter("id", "path", {
+    description: "Customer ID",
+    required: true,
+    schema: { type: "string" },
+  })
+  @ApiBody({ description: "Updated customer data", example: { name: "Company A Updated" } })
+  @ApiResponse(200, "Customer updated")
+  @ApiResponse(404, "Customer not found")
+  async update(@Req() req, @Res() res) {
+    const customer = this.customers.find((c) => c.id === req.params.id);
+    if (!customer) return res.status(404).json({ error: "Customer not found" });
+    Object.assign(customer, req.body);
+    res.json(customer);
+  }
+
+  @Delete("/:id")
+  @ApiDoc({ summary: "Delete customer" })
+  @ApiParameter("id", "path", { description: "Customer ID", required: true })
+  @ApiResponse(204, "Customer deleted")
+  @ApiResponse(404, "Customer not found")
+  async remove(@Req() req, @Res() res) {
+    const idx = this.customers.findIndex((c) => c.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: "Customer not found" });
+    this.customers.splice(idx, 1);
+    res.status(204).send();
+  }
+}
+
 ```
 
 ---
 
 ## Swagger UI Interface
 
-AzuraJS Swagger UI provides:
+The AzuraJS Swagger interface offers:
 
-- Modern dark mode design
-- Sidebar navigation by tags
-- Expandable endpoint cards
-- Syntax highlighting
-- Real-time search
-- Built-in **Try It Out**
-- One-click code copy
+### 🎨 Modern Design
 
----
+* Premium dark mode (inspired by Stripe/Vercel)
+* Sidebar with tag navigation
+* Expandable cards for each endpoint
+* Syntax highlighting for code
+
+### 🔍 Real-Time Search
+
+* Search endpoints by method or path
+* Instant filtering in the sidebar
+
+### 🚀 Try It Out
+
+* Test endpoints directly in the UI
+* Fill in parameters, query strings, and body
+* See the response in real-time
+* Displays response time
+
+### 📋 Features
+
+* Copy code with one click
+* Status code visualization
+* Request/response examples
+* Type documentation
+* Badges for required/deprecated
+
+## Advanced Configuration
+
+### Multiple Servers
+
+```typescript
+setupSwaggerWithControllers(
+  app,
+  {
+    title: "My API",
+    version: "1.0.0",
+    servers: [
+      { url: "http://localhost:3000", description: "Development" },
+      { url: "[https://api.example.com](https://api.example.com)", description: "Production" },
+      { url: "[https://staging.example.com](https://staging.example.com)", description: "Staging" },
+    ],
+  },
+  [UserController]
+);
+
+```
+
+### Security Schemes
+
+```typescript
+setupSwaggerWithControllers(
+  app,
+  {
+    title: "My API",
+    version: "1.0.0",
+    security: [{ bearerAuth: [] }],
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "JWT token from /auth/login",
+      },
+      apiKey: {
+        type: "apiKey",
+        in: "header",
+        name: "X-API-Key",
+        description: "API key from dashboard",
+      },
+      oauth2: {
+        type: "oauth2",
+        flows: {
+          authorizationCode: {
+            authorizationUrl: "[https://example.com/oauth/authorize](https://example.com/oauth/authorize)",
+            tokenUrl: "[https://example.com/oauth/token](https://example.com/oauth/token)",
+            scopes: {
+              "read:users": "Read user data",
+              "write:users": "Modify user data",
+            },
+          },
+        },
+      },
+    },
+  },
+  [UserController]
+);
+
+```
+
+### Contact & License
+
+```typescript
+setupSwaggerWithControllers(
+  app,
+  {
+    title: "My API",
+    description: "Complete API documentation",
+    version: "1.0.0",
+    contact: {
+      name: "API Support",
+      email: "support@example.com",
+      url: "[https://example.com/support](https://example.com/support)",
+    },
+    license: { name: "MIT", url: "[https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)" },
+  },
+  [UserController]
+);
+
+```
+
+## Manual Setup (Advanced)
+
+If you need more control, you can configure it manually:
+
+```typescript
+import { AzuraClient } from "azurajs";
+import { SwaggerIntegration } from "azurajs/swagger";
+import { SwaggerGenerator } from "azurajs/swagger";
+import { getControllerMetadata } from "azurajs/decorators";
+import UserController from "./controllers/UserController";
+
+const app = new AzuraClient();
+
+const generator = new SwaggerGenerator({
+  title: "My API",
+  version: "1.0.0",
+  description: "Manual Swagger generator",
+});
+
+const instance = new UserController();
+const metadata = getControllerMetadata(UserController);
+if (metadata && metadata.routes && metadata.routes.length) {
+  generator.addController(instance, metadata.routes, metadata.prefix);
+}
+
+const integration = new SwaggerIntegration(app, {
+  title: "My API",
+  version: "1.0.0",
+  path: "/docs",
+});
+
+integration.setup();
+app.registerController(UserController);
+
+await app.listen();
+
+```
+
+## TypeScript Types
+
+AzuraJS provides full types for OpenAPI 3.0:
+
+```typescript
+import type {
+  OpenAPIDocument,
+  SwaggerConfig,
+  ApiDocMetadata,
+  ApiResponseMetadata,
+  ParameterObject,
+  SchemaObject,
+} from "azurajs/swagger";
+
+const config: SwaggerConfig = {
+  title: "My API",
+  version: "1.0.0",
+  servers: [{ url: "http://localhost:3000" }],
+};
+
+```
+
+## Best Practices
+
+### 1. Use @ApiTags for Organization
+
+Group related endpoints with tags:
+
+```typescript
+@Controller("/users")
+@ApiTags("Users", "Management")
+class UserController {}
+
+@Controller("/products")
+@ApiTags("Products", "E-commerce")
+class ProductController {}
+
+```
+
+### 2. Provide Detailed Examples
+
+Examples help developers understand the expected format:
+
+```typescript
+@ApiBody({
+  description: "User registration data",
+  example: {
+    name: "John Doe",
+    email: "john@example.com",
+    password: "secure123",
+    preferences: {
+      newsletter: true,
+      notifications: ["email", "push"]
+    }
+  }
+})
+
+```
+
+### 3. Document All Status Codes
+
+Include all possible responses:
+
+```typescript
+@ApiResponse(200, "Success")
+@ApiResponse(400, "Bad request")
+@ApiResponse(401, "Unauthorized")
+@ApiResponse(403, "Forbidden")
+@ApiResponse(404, "Not found")
+@ApiResponse(500, "Server error")
+
+```
+
+### 4. Use Clear Descriptions
+
+Be descriptive in summaries and descriptions:
+
+```typescript
+@ApiDoc({
+  summary: "Update user profile",
+  description: "Updates the authenticated user's profile information. Only provided fields will be updated. Requires valid JWT token."
+})
+
+```
+
+### 5. Mark Deprecated Endpoints
+
+Inform when endpoints are deprecated:
+
+```typescript
+@Get("/old-api")
+@ApiDeprecated()
+@ApiDoc({
+  summary: "Legacy API endpoint",
+  description: "⚠️ Deprecated: Use /api/v2/endpoint instead. This endpoint will be removed in v3.0.0"
+})
+
+```
+
+## Troubleshooting
+
+### Documentation does not appear
+
+Ensure that:
+
+1. You imported the decorators from `azurajs/swagger`
+2. The decorators are applied to the methods
+3. The controllers were passed to `setupSwaggerWithControllers()`
+
+### Try It Out does not work
+
+Check:
+
+1. CORS is configured correctly
+2. The server is running at the expected URL
+3. The parameters are being filled in correctly
+
+### TypeScript Types do not work
+
+Ensure you import the types:
+
+```typescript
+import type { SwaggerConfig } from "azurajs/swagger";
+
+```
 
 ## Next Steps
 
-- [Examples](/docs/examples)
-- [Decorators](/docs/decorators)
-- [Controllers](/docs/controllers)
+* [Examples](https://www.google.com/search?q=/docs/examples) - See complete usage examples
+* [Decorators](https://www.google.com/search?q=/docs/decorators) - Learn more about decorators
+* [Controllers](https://www.google.com/search?q=/docs/controllers) - Understand how controllers work

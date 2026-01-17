@@ -17,11 +17,14 @@ import type { ConfigTypes } from "azurajs/config";
 
 const config: ConfigTypes = {
   environment: "development",
+  name: "My API",
   server: {
     port: 3000,
     cluster: false,
     ipHost: true,
     https: false,
+    trustProxy: true,
+    ipHeader: "x-forwarded-for",
   },
   logging: {
     enabled: true,
@@ -52,12 +55,13 @@ export default config;
 | Opção | Tipo | Padrão | Descrição |
 |-------|------|--------|-----------|
 | `environment` | `"development"` \| `"production"` \| `"test"` \| `"staging"` | `"development"` | Modo do ambiente da aplicação |
+| `name` | `string` | `"AzuraJS"` | Nome da aplicação |
 | `server.port` | `number` | `3000` | Número da porta do servidor |
 | `server.cluster` | `boolean` | `false` | Habilitar clustering multi-core |
 | `server.ipHost` | `boolean` | `false` | Exibir IP local na inicialização |
 | `server.https` | `boolean` | `false` | Flag de protocolo HTTPS |
-| `server.host` | `string` | `"0.0.0.0"` | Host de bind do servidor |
-| `server.workers` | `number` | `os.cpus().length` | Número de workers do cluster |
+| `server.trustProxy` | `boolean` | `true` | Habilitar proxy reverso |
+| `server.ipHeader` | `string` | `"x-forwarded-for"` | Cabeçalho de IP reverso |
 | `logging.enabled` | `boolean` | `true` | Habilitar logging de requisições |
 | `logging.showDetails` | `boolean` | `true` | Mostrar logs detalhados |
 | `logging.level` | `"trace"` \| `"debug"` \| `"info"` \| `"warn"` \| `"error"` | `"info"` | Nível mínimo de log |

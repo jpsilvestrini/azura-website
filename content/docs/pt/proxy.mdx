@@ -1,6 +1,7 @@
 ---
 title: Proxy
 description: Sistema de proxy e reverse proxy no AzuraJS
+icon: EthernetPort
 ---
 
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
@@ -25,7 +26,7 @@ app.proxy('/api', 'http://localhost:4000', {
   pathRewrite: { '^/api': '' }
 });
 
-app.listen(3000);
+await app.listen();
 ```
 </Tab>
 <Tab value="TypeScript">
@@ -39,7 +40,7 @@ app.proxy('/api', 'http://localhost:4000', {
   pathRewrite: { '^/api': '' }
 });
 
-app.listen(3000);
+await app.listen();
 ```
 </Tab>
 </Tabs>
@@ -358,7 +359,7 @@ app.proxy('/socket', 'ws://localhost:8080', {
   }
 });
 
-await app.listen(3000);
+await app.listen();
 ```
 
 ## Exemplos Avançados 🚀
@@ -950,7 +951,7 @@ app.proxy('/api/orders', 'http://localhost:4003', {
   pathRewrite: { '^/api/orders': '' }
 });
 
-await app.listen(3000);
+await app.listen();
 console.log('API Gateway rodando na porta 3000');
 ```
 

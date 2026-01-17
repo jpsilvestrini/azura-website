@@ -1,6 +1,7 @@
 ---
 title: Proxy & Reverse Proxy
 description: Complete proxy and reverse proxy system for building API Gateways and microservices
+icon: EthernetPort
 ---
 
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
@@ -52,7 +53,7 @@ app.proxy('/api', 'http://localhost:4000', {
   pathRewrite: { '^/api': '' }  // Remove /api prefix
 });
 
-await app.listen(3000);
+await app.listen();
 ```
 </Tab>
 <Tab value="JavaScript">
@@ -66,7 +67,7 @@ app.proxy('/api', 'http://localhost:4000', {
   pathRewrite: { '^/api': '' }  // Remove /api prefix
 });
 
-app.listen(3000);
+await app.listen();
 ```
 </Tab>
 </Tabs>
@@ -390,7 +391,7 @@ app.proxy('/socket', 'ws://localhost:8080', {
   }
 });
 
-await app.listen(3000);
+await app.listen();
 ```
 
 ## Advanced Examples 🚀
@@ -982,7 +983,7 @@ app.proxy('/api/orders', 'http://localhost:4003', {
   pathRewrite: { '^/api/orders': '' }
 });
 
-await app.listen(3000);
+await app.listen();
 console.log('API Gateway running on port 3000');
 ```
 

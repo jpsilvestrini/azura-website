@@ -32,11 +32,14 @@ import type { ConfigTypes } from "azurajs/config";
 
 const config: ConfigTypes = {
   environment: "development",
+  name: "My API",
   server: {
     port: 3000,
     cluster: false,
     ipHost: true,
     https: false,
+    trustProxy: true,
+    ipHeader: "x-forwarded-for",
   },
   logging: {
     enabled: true,
@@ -71,8 +74,8 @@ export default config;
 | `server.cluster` | `boolean` | `false` | Enable multi-core clustering |
 | `server.ipHost` | `boolean` | `false` | Display local IP on startup |
 | `server.https` | `boolean` | `false` | HTTPS protocol flag |
-| `server.host` | `string` | `"0.0.0.0"` | Server bind host |
-| `server.workers` | `number` | `os.cpus().length` | Number of cluster workers |
+| `server.trustProxy` | `boolean` | `true` | Enable reverse proxy |
+| `server.ipHeader` | `string` | `"x-forwarded-for"` | Reverse proxy IP header |
 | `logging.enabled` | `boolean` | `true` | Enable request logging |
 | `logging.showDetails` | `boolean` | `true` | Show detailed logs |
 | `logging.level` | `"trace"` \| `"debug"` \| `"info"` \| `"warn"` \| `"error"` | `"info"` | Minimum log level |

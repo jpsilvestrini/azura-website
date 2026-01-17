@@ -15,13 +15,13 @@ Middleware é uma função que executa durante o ciclo request-response, ficando
 ### Assinatura do Middleware
 
 ```typescript
-import type { RequestHandler } from "azurajs/types";
+import type { RequestHandler, NextFunction } from "azurajs/types";
 
 type RequestHandler = (
   req: RequestServer,
   res: ResponseServer,
-  next: (err?: unknown) => void
-) => void | Promise<void>;
+  next: NextFunction;
+) => void | Promise<void> | unknown;
 ```
 
 Cada middleware tem acesso a:
@@ -1009,9 +1009,8 @@ applyDecorators(app, [
 ]);
 
 // Iniciar servidor
-app.listen(3000, () => {
-  console.log("🚀 Servidor rodando em http://localhost:3000");
-});
+await app.listen();
+console.log("🚀 Servidor rodando em http://localhost:3000");
 ```
 
 ## Próximos Passos 📖

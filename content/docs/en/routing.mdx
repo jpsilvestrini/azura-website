@@ -690,7 +690,7 @@ const app = new AzuraClient();
 applyDecorators(app, [UserController]);
 
 // Start server
-await app.listen(3000);
+await app.listen();
 
 // Test endpoints
 const response = await fetch("http://localhost:3000/api/users/123");
@@ -1201,12 +1201,11 @@ app.use(({ req, res, next }) => {
 
 applyDecorators(app, [UserController, PostController]);
 
-app.listen(3000, () => {
-  console.log('Server started');
-  console.log('Test routes:');
-  console.log('- GET http://localhost:3000/api/users');
-  console.log('- GET http://localhost:3000/api/users/123');
-});
+await app.listen();
+console.log('Servidor iniciado');
+console.log('Testar rotas:');
+console.log('- GET http://localhost:3000/api/users');
+console.log('- GET http://localhost:3000/api/users/123');
 ```
 
 ## Next Steps 📖
