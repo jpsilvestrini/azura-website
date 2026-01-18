@@ -358,11 +358,6 @@ function PartnersSection() {
       url: "https://simobotlist.online/",
     },
     {
-      name: "Discloud",
-      logo: "/partners/discloud.png",
-      url: "https://discloud.com/",
-    },
-    {
       name: "Gratian Pro",
       logo: "/partners/gratian.png",
       url: "https://gratian.pro/",
