@@ -270,7 +270,7 @@ function TestimonialsSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://raw.githubusercontent.com/azurajs/azura/main/depoiments/depoiments.json")
+    fetch("https://raw.githubusercontent.com/azurajs/depoiments/refs/heads/main/depoiments.json")
       .then((res) => res.json())
       .then((data) => {
         setTestimonials(data.depoiments || []);
