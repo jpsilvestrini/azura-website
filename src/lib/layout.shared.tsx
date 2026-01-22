@@ -28,7 +28,7 @@ export function baseOptions(lang?: string): BaseLayoutProps {
           </div>
           <div className="ml-1 self-center">
             <span className="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20 font-medium">
-              v2.2 Beta
+              v2.6 Beta
             </span>
           </div>
         </div>
