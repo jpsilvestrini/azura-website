@@ -191,10 +191,10 @@ function InstallTabs() {
   const [copied, setCopied] = useState(false);
 
   const commands = {
-    npm: "npm install azurajs",
-    pnpm: "pnpm add azurajs",
-    bun: "bun add azurajs",
-    yarn: "yarn add azurajs",
+    npm: "npx @azurajs/cli create <app-name>",
+    pnpm: "pnpm dlx @azurajs/cli create <app-name>",
+    bun: "bunx @azurajs/cli create <app-name>",
+    yarn: "yarn dlx @azurajs/cli create <app-name>",
   };
 
   const handleCopy = () => {
