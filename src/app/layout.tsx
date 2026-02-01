@@ -3,6 +3,7 @@ import "./global.css";
 import { Inter } from "next/font/google";
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import Head from "next/head";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -78,9 +79,9 @@ export const metadata: Metadata = {
 export default function Layout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={inter.className} suppressHydrationWarning>
-      <head>
+      <Head>
         <link rel="icon" href="/logo.png" type="image/png" />
-      </head>
+      </Head>
       <body className="flex flex-col min-h-screen">
         <RootProvider>
           {children}
